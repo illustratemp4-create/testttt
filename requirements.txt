@@ -1,0 +1,7 @@
+PyMuPDF==1.26.3
+pinecone==7.3.0
+python-dotenv==1.1.1
+Requests==2.32.4
+sentence_transformers==5.0.0
+tqdm==4.67.1
+dotenv~=0.9.9
