@@ -5,3 +5,4 @@ Requests==2.32.4
 sentence_transformers==5.0.0
 tqdm==4.67.1
 dotenv~=0.9.9
+groq~=0.30.0
