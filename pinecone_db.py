@@ -17,7 +17,7 @@ index = pc.Index(host=os.environ['PINECONE_HOST'])
 # for ids in index.list(namespace='Bajaj'):
 #     print(ids)
 
-with open('arogya_parse_chunks.json', 'r', encoding='utf-8') as file:
+with open('insurance_parse_chunks.json', 'r', encoding='utf-8') as file:
     chunks = json.load(file)
 
 model = SentenceTransformer('BAAI/bge-base-en-v1.5')
@@ -36,10 +36,10 @@ for chunk in tqdm(chunks):
     batch.append((vector_id, vector, metadata))
 
     if len(batch) == 100:
-        index.upsert(vectors=batch, namespace='Arogya')
+        index.upsert(vectors=batch, namespace='Insurance')
         batch = []
 
 if batch:
-    index.upsert(vectors=batch, namespace='Arogya')
+    index.upsert(vectors=batch, namespace='Insurance')
 
 print(f'Uploaded {len(chunks)} chunks to pinecone')
