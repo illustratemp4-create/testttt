@@ -34,9 +34,7 @@ async def root(request_data: RequestData = Body(...),
     embedding(chunks)
     queries = request_data.questions
     return query_llm(queries)
-    # print('recieved data')
-    # return request_data
-    # return {header}
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
