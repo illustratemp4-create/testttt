@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from fastapi import FastAPI, Header, HTTPException, Body
 from parse_chunks import parse_chunk
 from pinecone_db import embedding

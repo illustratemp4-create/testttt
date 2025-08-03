@@ -7,7 +7,7 @@ load_dotenv()
 
 
 def parse_chunk(url):
-    x = download_and_extract(url)
+    x = download_and_extract(os.environ['INSURANCE_FILE_LINK'])
     chunks = chunk_text(x)
     d = {i: chunks[i] for i in range(len(chunks))}
     json_chunks = []
