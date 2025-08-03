@@ -14,7 +14,8 @@ def embedding(js):
     # print(pc.list_indexes())
     index = pc.Index(host=os.environ['PINECONE_HOST'])
 
-    index.delete(delete_all=True, namespace='Insurance')
+    if 'Insurance' in index.describe_index_stats()['namespaces']:
+        index.delete(delete_all=True, namespace='Insurance')
 
     # for ids in index.list(namespace='Bajaj'):
     #     print(ids)
