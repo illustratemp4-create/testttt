@@ -1,7 +1,6 @@
 import os
 from fastapi import FastAPI, Header, HTTPException, Body
 from parse_chunks import parse_chunk
-from pinecone_db import embedding
 from query import query_llm
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -31,9 +30,8 @@ async def root(request_data: RequestData = Body(...),
     if not header or header != f"{auth}":
         raise HTTPException(status_code=401, detail="UNAUTHORIZED")
     chunks = parse_chunk(request_data.documents)
-    embedding(chunks)
     queries = request_data.questions
-    return query_llm(queries)
+    return query_llm(chunks, queries)
 
 
 if __name__ == "__main__":

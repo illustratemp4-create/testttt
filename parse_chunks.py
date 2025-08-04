@@ -1,9 +1,5 @@
 from extract_chunk_support import download_and_extract, chunk_text
 import json
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
 
 
 def parse_chunk(url):
