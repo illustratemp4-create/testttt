@@ -12,10 +12,31 @@ def query_llm(json_chunks, queries):
     )
 
     chunks, embeddings = embed_chunks(json_chunks)
+    key_prompt = f"""You are an expert legal assistant.
+        You are given a set of questions and a document to query to get the answers from. Give your answer as a set of keywords that you would use to query the document using cosine similarity search.
+        Separate each set of keywords with a '|'. Do not repeat the questions in the answer, don't give any pretext.
+
+        Question:
+        {queries}
+
+        Answer: """
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": f"{key_prompt}",
+            }
+        ],
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
+    )
+    key_answers = chat_completion.choices[0].message.content
+    key_answers = key_answers.split('|')
+    key_answers = [answer.strip() for answer in key_answers if answer]
+    print(key_answers)
 
     # Batch query to LLM
     context = ''
-    for query in queries:
+    for query in key_answers:
         top_chunks = search(query, chunks, embeddings)
 
         context += '\n\n'.join(top_chunks)
@@ -46,7 +67,7 @@ def query_llm(json_chunks, queries):
 
     # Postprocessing
     answers = answers.split('|')
-    answers = [answer.strip() for answer in answers if answer]
+    answers = [answer.strip() for answer in answers if answer != ""]
 
     ans = {"answers": answers}
 
