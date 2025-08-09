@@ -32,7 +32,7 @@ def query_llm(json_chunks, queries):
     key_answers = chat_completion.choices[0].message.content
     key_answers = key_answers.split('|')
     key_answers = [answer.strip() for answer in key_answers if answer]
-    print(key_answers)
+    # print(key_answers)
 
     # Batch query to LLM
     context = ''
@@ -69,11 +69,14 @@ def query_llm(json_chunks, queries):
         model="meta-llama/llama-4-scout-17b-16e-instruct",
     )
     answers = chat_completion.choices[0].message.content
-    print(answers)
+    with open('answers.txt', 'a', encoding='utf-8') as file:
+        file.write('New ans start here' + str(answers) + '\n')
 
     # Postprocessing
     answers = answers.split('|')
     answers = [answer.strip() for answer in answers if answer.strip() != ""]
+    if answers[0] == '-':
+        answers = answers[1:]
 
     ans = {"answers": answers}
 
