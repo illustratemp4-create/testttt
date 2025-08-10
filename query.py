@@ -1,3 +1,5 @@
+import groq
+
 from pinecone_db import embed_chunks, search
 from dotenv import load_dotenv
 import os
@@ -35,16 +37,17 @@ def query_llm(json_chunks, queries):
     print(key_answers)
 
     # Batch query to LLM
-    context = ''
+    context1 = ''
     for query in key_answers:
         top_chunks = search(query, chunks, embeddings)
 
-        context += '\n\n'.join(top_chunks)
+        context1 += '\n\n'.join(top_chunks)
 
-    # for query in queries:
-    #     top_chunks = search(query, chunks, embeddings)
-    #
-    #     context += '\n\n'.join(top_chunks)
+    context2 = ''
+    for query in queries:
+        top_chunks = search(query, chunks, embeddings)
+
+        context2 += '\n\n'.join(top_chunks)
     # print(context)
 
     prompt = f"""You are an expert legal assistant.
@@ -53,24 +56,50 @@ def query_llm(json_chunks, queries):
     If it's not answerable from the text, say "Not found in document". If conditions apply for the answer, specify them.
     
     Context:
-    {context}
+    {context1 + context2}
     
     Question:
     {queries}
     
     Answer: """
 
-    chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": f"{prompt}",
-            }
-        ],
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
-    )
-    print(chat_completion)
-    answers = chat_completion.choices[0].message.content
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"{prompt}",
+                }
+            ],
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+        )
+        print(chat_completion)
+        answers = chat_completion.choices[0].message.content
+    except groq.APIStatusError:
+        prompt = f"""You are an expert legal assistant.
+            Use the following context to answer the following questions.
+            Separate each answer with a '|'. Do not repeat the questions in the answer.
+            If it's not answerable from the text, say "Not found in document". If conditions apply for the answer, specify them.
+
+            Context:
+            {context1}
+
+            Question:
+            {queries}
+
+            Answer: """
+        print('Exception occurred')
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"{prompt}",
+                }
+            ],
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+        )
+        print(chat_completion)
+        answers = chat_completion.choices[0].message.content
     # with open('answers.txt', 'a', encoding='utf-8') as file:
     #     file.write('New ans start here' + str(answers) + '\n')
 
