@@ -31,6 +31,8 @@ async def root(request_data: RequestData = Body(...),
         raise HTTPException(status_code=401, detail="UNAUTHORIZED")
     chunks = parse_chunk(request_data.documents)
     queries = request_data.questions
+    # with open('questions.txt', 'a', encoding='utf-8') as file:
+    #     file.write('New ques start here' + str(queries) + '\n')
     return query_llm(chunks, queries)
 
 
