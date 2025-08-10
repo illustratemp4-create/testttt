@@ -3,6 +3,7 @@ import json
 
 
 def parse_chunk(url):
+    # Calls file parsing and chunking functions and returns chunks in an appropriate format
     x = download_and_extract(url)
     chunks = chunk_text(x)
     d = {i: chunks[i] for i in range(len(chunks))}

@@ -18,7 +18,7 @@ def download_and_extract(url):
         pages_text.append(lines)
         all_lines.extend(lines)
 
-    # Detect common lines
+    # Detect common lines (to avoid stuff such as boilerplate text and addresses)
     line_counts = Counter(all_lines)
     repeated_lines = {line for line, count in line_counts.items() if count > 1}
 
@@ -29,6 +29,7 @@ def download_and_extract(url):
 
     full_text = "\n\n".join(cleaned_pages)
 
+    # Normalizing spaces
     full_text = re.sub(r"\bPage\s*\d+\b", "", full_text, flags=re.IGNORECASE)
     full_text = re.sub(r"\s+", " ", full_text).strip()
 
@@ -40,6 +41,7 @@ def chunk_text(text, chunk_size=500, overlap=50):
     chunks = []
     current_chunk = ""
 
+    # performs chunking with 10% overlaps
     for sentence in sentences:
         if len(current_chunk) + len(sentence) + 1 > chunk_size:
             chunks.append(current_chunk.strip())

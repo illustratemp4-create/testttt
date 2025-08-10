@@ -19,6 +19,7 @@ class RequestData(BaseModel):
 
 @app.get("/")
 async def home():
+    # Sample page
     return {'hello': 'world'}
 
 
@@ -26,13 +27,16 @@ async def home():
 async def root(request_data: RequestData = Body(...),
                header: str = Header(None, alias="Authorization")
                ):
+    # Authorization check
     auth = os.environ['HACKRX_API_KEY']
     if not header or header != f"{auth}":
         raise HTTPException(status_code=401, detail="UNAUTHORIZED")
+
+    # Chunking
     chunks = parse_chunk(request_data.documents)
+
+    # Querying
     queries = request_data.questions
-    # with open('questions.txt', 'a', encoding='utf-8') as file:
-    #     file.write('New ques start here' + str(queries) + '\n')
     return query_llm(chunks, queries)
 
 
