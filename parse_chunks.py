@@ -14,8 +14,6 @@ def parse_chunk(url):
             'text': item,
         }
         json_chunks.append(temp)
-    # with open('insurance_parse_chunks.json', 'w', encoding='utf-8') as file:
-    #     json.dump(json_chunks, file)
 
     ans = json.dumps(json_chunks)
     return ans

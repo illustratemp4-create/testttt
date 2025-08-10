@@ -1,6 +1,6 @@
 import groq
 
-from pinecone_db import embed_chunks, search
+from embedding import embed_chunks, search
 from dotenv import load_dotenv
 import os
 from groq import Groq
@@ -30,11 +30,9 @@ def query_llm(json_chunks, queries):
         ],
         model="meta-llama/llama-4-scout-17b-16e-instruct",
     )
-    # print(chat_completion)
     key_answers = chat_completion.choices[0].message.content
     key_answers = key_answers.split('|')
     key_answers = [answer.strip() for answer in key_answers if answer]
-    # print(key_answers)
 
     # Batch query to LLM
     context1 = ''
@@ -48,7 +46,6 @@ def query_llm(json_chunks, queries):
         top_chunks = search(query, chunks, embeddings)
 
         context2 += '\n\n'.join(top_chunks)
-    # print(context)
 
     prompt = f"""You are an expert legal assistant.
     Use the following context to answer the following questions.
@@ -98,10 +95,7 @@ def query_llm(json_chunks, queries):
             ],
             model="meta-llama/llama-4-scout-17b-16e-instruct",
         )
-        # print(chat_completion)
         answers = chat_completion.choices[0].message.content
-    # with open('answers.txt', 'a', encoding='utf-8') as file:
-    #     file.write('New ans start here' + str(answers) + '\n')
 
     # Postprocessing
     answers = answers.split('|')
