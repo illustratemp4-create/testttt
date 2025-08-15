@@ -15,6 +15,6 @@ It processes the document, understands the context, and gives concise, relevant 
 ---
 
 ## 📽️ Demo:
-![Demo](images/demo.gif)
+![Demo](images/demo_new.gif)
 
 
