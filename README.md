@@ -14,22 +14,7 @@ It processes the document, understands the context, and gives concise, relevant 
 
 ---
 
-## 📸 Screenshots
+## 📽️ Demo:
+![Demo](images/demo.gif)
 
-### 1️⃣ Landing Page
-![Landing Page](images/main.png)
 
-### 2️⃣ Thinking...
-![Thinking](images/qn.png)
-
-### 3️⃣ Final Output
-![Final Output](images/ans.png)
-
----
-
-## 🛠️ Installation & Usage
-
-### 1. Clone the repository
-```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
