@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <style type="text/tailwindcss">
@@ -90,35 +90,40 @@
                 d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"
               ></path>
             </svg>
-            <span>Link PDF</span>
+            <span>Upload PDF</span>
           </button>
         </div>
       </div>
     </div>
 
+    <!-- Hidden file input MUST be inside body -->
+    <input id="pdfFile" type="file" accept="application/pdf" class="hidden" />
+
     <script>
-      // Point to your FastAPI endpoint
-      const API_URL = "http://127.0.0.1:8000/hackrx/run";
+      // Endpoints
+      const API_URL_FILE = "http://127.0.0.1:8000/hackrx/run-file"; // upload endpoint
+      const API_URL_JSON = "http://127.0.0.1:8000/hackrx/run"; // (optional) URL mode
+
       // For dev only. Don’t ship secrets to the client.
       const API_KEY =
         "Bearer de76e1ceaf35c910a462d99d6dba035da148a3d5f1a4f4c7de7cc7ed0add5674";
 
-      let pdfUrl = ""; // set when user clicks "Link PDF"
+      let pdfFile = null; // selected File object
+      let pdfUrl = ""; // optional URL mode
 
       const output = document.getElementById("chatbot-output");
       const input = document.getElementById("questionInput");
       const send = document.getElementById("sendBtn");
       const link = document.getElementById("linkBtn");
+      const fileInput = document.getElementById("pdfFile");
 
-      // Escape helper to avoid HTML injection in bubbles
+      // Helpers
       function escapeHTML(s) {
         return s
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;");
       }
-
-      // Chat bubble renderer
       function addMessage(role, text) {
         const wrap = document.createElement("div");
         wrap.className = `my-2 ${role === "user" ? "text-right" : "text-left"}`;
@@ -132,44 +137,33 @@
         output.scrollTop = output.scrollHeight;
         return wrap;
       }
-
-      // Loader bubble with spinner
       function addLoaderMessage() {
         const wrap = document.createElement("div");
         wrap.className = "my-2 text-left";
-
         const bubble = document.createElement("div");
         bubble.className =
           "inline-flex items-center gap-2 max-w-[90%] rounded-xl px-4 py-2 bg-[var(--input-background)]";
-
         bubble.innerHTML = `
           <svg class="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
           </svg>
-          <span>Searching...</span>
-        `;
-
+          <span>Searching...</span>`;
         wrap.appendChild(bubble);
         output.appendChild(wrap);
         output.scrollTop = output.scrollHeight;
         return wrap;
       }
-
       function removeMessage(el) {
         if (el && el.parentNode) el.parentNode.removeChild(el);
       }
 
-      // Disable UI while loading
       let isLoading = false;
       function setLoading(state) {
         isLoading = state;
-
         input.disabled = state;
         send.disabled = state;
         link.disabled = state;
-
-        // visual hint
         send.classList.toggle("opacity-50", state);
         send.classList.toggle("cursor-not-allowed", state);
         link.classList.toggle("opacity-50", state);
@@ -177,27 +171,31 @@
         input.classList.toggle("opacity-70", state);
       }
 
-      // Link a PDF URL
-      link.addEventListener("click", async () => {
+      // Upload flow
+      link.addEventListener("click", () => {
         if (isLoading) return;
-        const url = prompt("Paste the PDF link:");
-        if (!url) return;
-
-        // very basic check
-        if (!/^https?:\/\/.+/i.test(url)) {
-          alert("Please enter a valid http(s) URL.");
-          return;
-        }
-        pdfUrl = url;
-        addMessage("assistant", `📎 Linked PDF: ${pdfUrl}`);
+        fileInput.click();
       });
 
-      // Send question(s)
+      fileInput.addEventListener("change", () => {
+        if (!fileInput.files || !fileInput.files[0]) return;
+        const f = fileInput.files[0];
+        if (f.type !== "application/pdf") {
+          alert("Please select a PDF file.");
+          fileInput.value = "";
+          return;
+        }
+        pdfFile = f;
+        addMessage("assistant", `📎 Selected PDF: ${f.name}`);
+      });
+
       async function sendQuestion() {
         const raw = input.value.trim();
         if (!raw) return;
-        if (!pdfUrl) {
-          alert("Please link a PDF first.");
+
+        // Require either an uploaded file or a linked URL
+        if (!pdfFile && !pdfUrl) {
+          alert("Please upload a PDF (or link a PDF) first.");
           return;
         }
 
@@ -205,7 +203,7 @@
         addMessage("user", raw);
         input.value = "";
 
-        // Split by newlines into multiple questions
+        // Split into multiple questions (newline-separated)
         const questions = raw
           .split(/\r?\n/)
           .map((s) => s.trim())
@@ -215,17 +213,29 @@
         const loaderEl = addLoaderMessage();
 
         try {
-          const res = await fetch(API_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: API_KEY,
-            },
-            body: JSON.stringify({
-              documents: pdfUrl,
-              questions,
-            }),
-          });
+          let res;
+          if (pdfFile) {
+            // multipart/form-data upload
+            const form = new FormData();
+            form.append("file", pdfFile);
+            form.append("questions_json", JSON.stringify(questions));
+
+            res = await fetch(API_URL_FILE, {
+              method: "POST",
+              headers: { Authorization: API_KEY }, // don't set Content-Type
+              body: form,
+            });
+          } else {
+            // (optional) URL mode
+            res = await fetch(API_URL_JSON, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: API_KEY,
+              },
+              body: JSON.stringify({ documents: pdfUrl, questions }),
+            });
+          }
 
           if (!res.ok) {
             const err = await res.json().catch(() => ({}));
@@ -253,7 +263,6 @@
       send.addEventListener("click", () => {
         if (!isLoading) sendQuestion();
       });
-
       input.addEventListener("keydown", (e) => {
         if (isLoading) return;
         if (e.key === "Enter" && !e.shiftKey) {
