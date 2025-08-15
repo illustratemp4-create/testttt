@@ -124,6 +124,7 @@
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;");
       }
+
       function addMessage(role, text) {
         const wrap = document.createElement("div");
         wrap.className = `my-2 ${role === "user" ? "text-right" : "text-left"}`;
@@ -137,6 +138,36 @@
         output.scrollTop = output.scrollHeight;
         return wrap;
       }
+
+      // NEW: typewriter bubble for assistant
+      function addMessageTyping(role, fullText, speed = 20) {
+        const wrap = document.createElement("div");
+        wrap.className = `my-2 ${role === "user" ? "text-right" : "text-left"}`;
+        const bubble = document.createElement("div");
+        bubble.className = `inline-block max-w-[90%] whitespace-pre-wrap rounded-xl px-4 py-2 ${
+          role === "user" ? "bg-blue-600" : "bg-[var(--input-background)]"
+        }`;
+        wrap.appendChild(bubble);
+        output.appendChild(wrap);
+        output.scrollTop = output.scrollHeight;
+
+        let i = 0;
+        (function typeNext() {
+          // Natural-ish pacing: faster on spaces, slower on punctuation
+          const ch = fullText[i] || "";
+          const delay =
+            ch === " "
+              ? Math.max(5, speed * 0.5)
+              : ",.!?:;".includes(ch)
+              ? speed * 2
+              : speed;
+          bubble.textContent = fullText.slice(0, i);
+          i++;
+          output.scrollTop = output.scrollHeight;
+          if (i <= fullText.length) setTimeout(typeNext, delay);
+        })();
+      }
+
       function addLoaderMessage() {
         const wrap = document.createElement("div");
         wrap.className = "my-2 text-left";
@@ -154,6 +185,7 @@
         output.scrollTop = output.scrollHeight;
         return wrap;
       }
+
       function removeMessage(el) {
         if (el && el.parentNode) el.parentNode.removeChild(el);
       }
@@ -192,18 +224,14 @@
       async function sendQuestion() {
         const raw = input.value.trim();
         if (!raw) return;
-
-        // Require either an uploaded file or a linked URL
         if (!pdfFile && !pdfUrl) {
           alert("Please upload a PDF (or link a PDF) first.");
           return;
         }
 
-        // Show user message
         addMessage("user", raw);
         input.value = "";
 
-        // Split into multiple questions (newline-separated)
         const questions = raw
           .split(/\r?\n/)
           .map((s) => s.trim())
@@ -215,18 +243,15 @@
         try {
           let res;
           if (pdfFile) {
-            // multipart/form-data upload
             const form = new FormData();
             form.append("file", pdfFile);
             form.append("questions_json", JSON.stringify(questions));
-
             res = await fetch(API_URL_FILE, {
               method: "POST",
-              headers: { Authorization: API_KEY }, // don't set Content-Type
+              headers: { Authorization: API_KEY },
               body: form,
             });
           } else {
-            // (optional) URL mode
             res = await fetch(API_URL_JSON, {
               method: "POST",
               headers: {
@@ -251,7 +276,8 @@
               : JSON.stringify(data, null, 2);
 
           removeMessage(loaderEl);
-          addMessage("assistant", text);
+          // Use the typewriter effect for assistant replies
+          addMessageTyping("assistant", text, 18); // adjust speed as you like
         } catch (e) {
           removeMessage(loaderEl);
           addMessage("assistant", `❌ Error: ${e.message}`);
