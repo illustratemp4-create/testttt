@@ -54,7 +54,6 @@ def query_llm(json_chunks, queries):
     prompt = f"""You are an expert legal assistant.
     Use the following context to answer the following questions.
     Separate each answer with a '|'. Do not repeat the questions in the answer.
-    If it's not answerable from the text, say "Not found in document". If conditions apply for the answer, specify them.
     
     Context:
     {context1 + context2}
@@ -80,7 +79,6 @@ def query_llm(json_chunks, queries):
         prompt = f"""You are an expert legal assistant.
             Use the following context to answer the following questions.
             Separate each answer with a '|'. Do not repeat the questions in the answer.
-            If it's not answerable from the text, say "Not found in document". If conditions apply for the answer, specify them.
 
             Context:
             {context1}

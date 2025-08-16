@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Chatbot Interface</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style type="text/tailwindcss">
+      :root {
+        --primary-color: #0d7ff2;
+        --background-color: #121212;
+        --text-primary: #ffffff;
+        --text-secondary: #a1a1aa;
+        --input-background: #1e293b;
+        --input-border: #334155;
+        --input-focus-border: #0d7ff2;
+        --gradient-start: #1e3a8a;
+        --gradient-end: #000000;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+      }
+    </style>
+  </head>
+
+  <body
+    class="bg-gradient-to-b from-[var(--gradient-end)] to-[var(--gradient-start)] text-[var(--text-primary)] min-h-screen flex flex-col items-center justify-center p-4"
+  >
+    <div class="w-full h-full flex flex-col justify-end max-w-3xl mx-auto">
+      <div class="w-full flex-grow rounded-lg p-4 mb-4" id="chatbot-output">
+        <h1 class="text-4xl font-bold text-center text-white mb-8">
+          Ask me anything about your pdf
+        </h1>
+        <!-- messages will be appended here -->
+      </div>
+
+      <div class="w-full">
+        <div
+          class="relative w-full p-1.5 rounded-xl bg-gradient-to-r from-[var(--primary-color)] via-purple-500 to-pink-500"
+        >
+          <div
+            class="flex items-center bg-[var(--background-color)] rounded-lg p-1"
+          >
+            <input
+              id="questionInput"
+              class="w-full flex-1 bg-transparent border-none focus:outline-none text-[var(--text-primary)] placeholder-[var(--text-secondary)] px-4 py-3"
+              placeholder="Ask me anything..."
+              type="text"
+            />
+            <button
+              id="sendBtn"
+              class="mr-2 p-2 rounded-full bg-[var(--primary-color)] hover:bg-opacity-80 transition-colors"
+            >
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M22 2L11 13"></path>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex justify-end mt-4">
+          <button
+            id="linkBtn"
+            class="flex items-center gap-2 px-4 py-2 bg-[var(--input-background)] text-[var(--text-secondary)] rounded-lg hover:bg-opacity-80 transition-colors"
+          >
+            <svg
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 256 256"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"
+              ></path>
+            </svg>
+            <span>Upload PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden file input MUST be inside body -->
+    <input id="pdfFile" type="file" accept="application/pdf" class="hidden" />
+
+    <script>
+      // Endpoints
+      const API_URL_FILE = "http://127.0.0.1:8000/hackrx/run-file"; // upload endpoint
+      const API_URL_JSON = "http://127.0.0.1:8000/hackrx/run"; // (optional) URL mode
+
+      // For dev only. Don’t ship secrets to the client.
+      const API_KEY =
+        "Bearer de76e1ceaf35c910a462d99d6dba035da148a3d5f1a4f4c7de7cc7ed0add5674";
+
+      let pdfFile = null; // selected File object
+      let pdfUrl = ""; // optional URL mode
+
+      const output = document.getElementById("chatbot-output");
+      const input = document.getElementById("questionInput");
+      const send = document.getElementById("sendBtn");
+      const link = document.getElementById("linkBtn");
+      const fileInput = document.getElementById("pdfFile");
+
+      // Helpers
+      function escapeHTML(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function addMessage(role, text) {
+        const wrap = document.createElement("div");
+        wrap.className = `my-2 ${role === "user" ? "text-right" : "text-left"}`;
+        wrap.innerHTML = `
+          <div class="inline-block max-w-[90%] rounded-xl px-4 py-2 ${
+            role === "user" ? "bg-blue-600" : "bg-[var(--input-background)]"
+          }">
+            ${escapeHTML(text)}
+          </div>`;
+        output.appendChild(wrap);
+        output.scrollTop = output.scrollHeight;
+        return wrap;
+      }
+
+      // NEW: typewriter bubble for assistant
+      function addMessageTyping(role, fullText, speed = 20) {
+        const wrap = document.createElement("div");
+        wrap.className = `my-2 ${role === "user" ? "text-right" : "text-left"}`;
+        const bubble = document.createElement("div");
+        bubble.className = `inline-block max-w-[90%] whitespace-pre-wrap rounded-xl px-4 py-2 ${
+          role === "user" ? "bg-blue-600" : "bg-[var(--input-background)]"
+        }`;
+        wrap.appendChild(bubble);
+        output.appendChild(wrap);
+        output.scrollTop = output.scrollHeight;
+
+        let i = 0;
+        (function typeNext() {
+          // Natural-ish pacing: faster on spaces, slower on punctuation
+          const ch = fullText[i] || "";
+          const delay =
+            ch === " "
+              ? Math.max(5, speed * 0.5)
+              : ",.!?:;".includes(ch)
+              ? speed * 2
+              : speed;
+          bubble.textContent = fullText.slice(0, i);
+          i++;
+          output.scrollTop = output.scrollHeight;
+          if (i <= fullText.length) setTimeout(typeNext, delay);
+        })();
+      }
+
+      function addLoaderMessage() {
+        const wrap = document.createElement("div");
+        wrap.className = "my-2 text-left";
+        const bubble = document.createElement("div");
+        bubble.className =
+          "inline-flex items-center gap-2 max-w-[90%] rounded-xl px-4 py-2 bg-[var(--input-background)]";
+        bubble.innerHTML = `
+          <svg class="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <span>Searching...</span>`;
+        wrap.appendChild(bubble);
+        output.appendChild(wrap);
+        output.scrollTop = output.scrollHeight;
+        return wrap;
+      }
+
+      function removeMessage(el) {
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+      }
+
+      let isLoading = false;
+      function setLoading(state) {
+        isLoading = state;
+        input.disabled = state;
+        send.disabled = state;
+        link.disabled = state;
+        send.classList.toggle("opacity-50", state);
+        send.classList.toggle("cursor-not-allowed", state);
+        link.classList.toggle("opacity-50", state);
+        link.classList.toggle("cursor-not-allowed", state);
+        input.classList.toggle("opacity-70", state);
+      }
+
+      // Upload flow
+      link.addEventListener("click", () => {
+        if (isLoading) return;
+        fileInput.click();
+      });
+
+      fileInput.addEventListener("change", () => {
+        if (!fileInput.files || !fileInput.files[0]) return;
+        const f = fileInput.files[0];
+        if (f.type !== "application/pdf") {
+          alert("Please select a PDF file.");
+          fileInput.value = "";
+          return;
+        }
+        pdfFile = f;
+        addMessage("assistant", `📎 Selected PDF: ${f.name}`);
+      });
+
+      async function sendQuestion() {
+        const raw = input.value.trim();
+        if (!raw) return;
+        if (!pdfFile && !pdfUrl) {
+          alert("Please upload a PDF (or link a PDF) first.");
+          return;
+        }
+
+        addMessage("user", raw);
+        input.value = "";
+
+        const questions = raw
+          .split(/\r?\n/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+        setLoading(true);
+        const loaderEl = addLoaderMessage();
+
+        try {
+          let res;
+          if (pdfFile) {
+            const form = new FormData();
+            form.append("file", pdfFile);
+            form.append("questions_json", JSON.stringify(questions));
+            res = await fetch(API_URL_FILE, {
+              method: "POST",
+              headers: { Authorization: API_KEY },
+              body: form,
+            });
+          } else {
+            res = await fetch(API_URL_JSON, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: API_KEY,
+              },
+              body: JSON.stringify({ documents: pdfUrl, questions }),
+            });
+          }
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || `HTTP ${res.status}`);
+          }
+
+          const data = await res.json();
+          const text =
+            typeof data === "string"
+              ? data
+              : Array.isArray(data.answers)
+              ? data.answers.join("\n\n")
+              : JSON.stringify(data, null, 2);
+
+          removeMessage(loaderEl);
+          // Use the typewriter effect for assistant replies
+          addMessageTyping("assistant", text, 18); // adjust speed as you like
+        } catch (e) {
+          removeMessage(loaderEl);
+          addMessage("assistant", `❌ Error: ${e.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      send.addEventListener("click", () => {
+        if (!isLoading) sendQuestion();
+      });
+      input.addEventListener("keydown", (e) => {
+        if (isLoading) return;
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendQuestion();
+        }
+      });
+    </script>
+  </body>
+</html>

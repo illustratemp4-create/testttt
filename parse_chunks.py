@@ -1,20 +1,26 @@
-from extract_chunk_support import download_and_extract, chunk_text
+from extract_chunk_support import extract_text, chunk_text
 import json
+from typing import Union
 
+def parse_chunk(document: Union[str, bytes], file_name: str = "Insurance") -> str:
+    """
+    Accepts:
+      - bytes: raw PDF bytes (from file upload)
+      - str:   http(s) URL to a PDF OR plain text
+    Returns:
+      - JSON string of chunk objects (same shape as before)
+    """
+    text = extract_text(document)
+    chunks = chunk_text(text)
 
-def parse_chunk(url):
-    # Calls file parsing and chunking functions and returns chunks in an appropriate format
-    x = download_and_extract(url)
-    chunks = chunk_text(x)
-    d = {i: chunks[i] for i in range(len(chunks))}
     json_chunks = []
-    for key, item in d.items():
-        temp = {
-            'file_name': 'Insurance',
-            'chunk_id': key,
-            'text': item,
-        }
-        json_chunks.append(temp)
+    for i, item in enumerate(chunks):
+        json_chunks.append(
+            {
+                "file_name": file_name,
+                "chunk_id": i,
+                "text": item,
+            }
+        )
 
-    ans = json.dumps(json_chunks)
-    return ans
+    return json.dumps(json_chunks)
