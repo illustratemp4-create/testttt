@@ -1,0 +1,112 @@
+RFP Document Extractor - Complete File Structure
+=================================================
+
+Core Program Files:
+-------------------
+rfp_extractor.py              Main extraction logic and RFPExtractor class (~350 lines)
+rfp_processor.py              Command-line interface (~120 lines)
+test_rfp_extractor.py         Testing and demonstration script (~150 lines)
+examples_rfp_extractor.py     Advanced usage examples (~280 lines)
+
+Documentation Files:
+--------------------
+RFP_README.md                 Complete user documentation (15 pages)
+PROJECT_OVERVIEW.md           Technical architecture and overview (12 pages)
+IMPLEMENTATION_SUMMARY.md     Assignment compliance summary (8 pages)
+FILE_STRUCTURE.txt            This file - project structure overview
+
+Sample and Configuration:
+-------------------------
+sample_rfp.html               Sample RFP document for testing
+.env.template                 Environment variable template
+requirements.txt              Python dependencies (all required packages)
+
+Original Project Files:
+-----------------------
+main.py                       Original PDF chatbot FastAPI application
+embedding.py                  Embedding and search functionality
+extract_chunk_support.py      PDF text extraction and chunking
+parse_chunks.py               Document parsing utilities
+query.py                      LLM query processing
+README.md                     Updated project overview (both tools)
+
+Directory Structure:
+--------------------
+/app/
+├── rfp_extractor.py          ← RFP extraction core
+├── rfp_processor.py          ← CLI interface
+├── test_rfp_extractor.py     ← Testing script
+├── examples_rfp_extractor.py ← Advanced examples
+├── RFP_README.md             ← User documentation
+├── PROJECT_OVERVIEW.md       ← Technical docs
+├── IMPLEMENTATION_SUMMARY.md ← Assignment summary
+├── FILE_STRUCTURE.txt        ← This file
+├── sample_rfp.html           ← Sample document
+├── .env.template             ← Config template
+├── requirements.txt          ← Dependencies
+├── README.md                 ← Main README
+├── main.py                   ← Original chatbot
+├── embedding.py              ← Original chatbot
+├── extract_chunk_support.py  ← Original chatbot
+├── parse_chunks.py           ← Original chatbot
+├── query.py                  ← Original chatbot
+├── public/                   ← Original chatbot assets
+│   └── index.html
+└── images/                   ← Original chatbot demos
+    ├── demo.gif
+    ├── demo_new.gif
+    └── ...
+
+Quick Start Commands:
+---------------------
+# Setup
+cp .env.template .env
+# Edit .env and add GROQ_API_KEY
+
+# Run tests
+python test_rfp_extractor.py
+
+# Process a document
+python rfp_processor.py -f document.pdf -o output.json
+
+# Process sample
+python rfp_processor.py -f sample_rfp.html -o sample_output.json
+
+Documentation Reading Order:
+----------------------------
+1. RFP_README.md              - Start here for basic usage
+2. PROJECT_OVERVIEW.md        - Understand the architecture
+3. IMPLEMENTATION_SUMMARY.md  - See assignment compliance
+4. examples_rfp_extractor.py  - Learn advanced usage
+5. test_rfp_extractor.py      - See testing examples
+
+Key Features:
+-------------
+✅ Extract 20 predefined fields from RFP documents
+✅ Support for PDF and HTML formats
+✅ AI-powered extraction using Groq LLM (Llama 4 Scout)
+✅ Structured JSON output
+✅ Command-line interface
+✅ Programmatic API
+✅ Batch processing
+✅ Comprehensive documentation
+✅ Test suite with samples
+✅ Production-ready error handling
+
+Dependencies:
+-------------
+beautifulsoup4==4.14.2        HTML parsing
+lxml==6.0.2                   XML/HTML processing
+PyMuPDF==1.26.5               PDF text extraction
+groq==0.33.0                  Groq API client
+python-dotenv==1.1.1          Environment variables
+(+ other dependencies in requirements.txt)
+
+Total Lines of Code:
+--------------------
+Python Code: ~900 lines
+Documentation: 35+ pages
+Sample Files: 1 HTML document
+Tests: Automated test suite
+
+Status: ✅ COMPLETE AND READY FOR USE
